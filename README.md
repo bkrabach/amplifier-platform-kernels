@@ -14,6 +14,24 @@ The adjacent Python and Node runners execute in those owned child processes.
 Node's VM is a persistent namespace, not a security boundary. Existing process
 authority and cleanup still apply.
 
+## Ecosystem map
+
+[Project overview](https://microsoft.github.io/amplifier-constellation/projects/amplifier-platform-kernels/) ·
+[Open the map](https://github.com/bkrabach/amplifier-platform-kernels/blob/main/docs/ecosystem-map.svg) ·
+[Map guide](https://github.com/microsoft/amplifier-constellation/blob/main/docs/ecosystem-maps.md)
+
+![Supporting package responsibilities and the surrounding ecosystem](https://raw.githubusercontent.com/bkrabach/amplifier-platform-kernels/main/docs/ecosystem-map.svg)
+
+<details>
+<summary>The wider Constellation ecosystem</summary>
+
+![Constellation's five roles and their relationships](https://raw.githubusercontent.com/microsoft/amplifier-constellation/main/site/assets/art/building-blocks.png)
+
+</details>
+
+These maps are generated from the [canonical registry](https://github.com/microsoft/amplifier-constellation/blob/main/docs/ecosystem/registry.json).
+Update that source and refresh the local maps together; a map is not a release or compatibility claim.
+
 ## Build and test independently
 
 Use an owned Python 3.13 or newer environment. From this directory:

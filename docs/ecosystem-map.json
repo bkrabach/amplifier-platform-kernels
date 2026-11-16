@@ -1,0 +1,91 @@
+{
+  "audience": "Developers embedding the documented Python library",
+  "citations": [
+    {
+      "path": "README.md",
+      "ref": "6a8ec71de68cae09e844f77a547475eded68f963",
+      "sha256": "c65344163bda3ae79717e5f69f785b7e1099bf7bbe99d3aebbcfea72ecc74beb",
+      "url": "https://github.com/bkrabach/amplifier-platform-kernels/blob/6a8ec71de68cae09e844f77a547475eded68f963/README.md"
+    },
+    {
+      "path": "PROVENANCE.json",
+      "ref": "6a8ec71de68cae09e844f77a547475eded68f963",
+      "sha256": "b764544888a41da551518d730ad65781812a12fe28f6810c8b86898bff6cfd26",
+      "url": "https://github.com/bkrabach/amplifier-platform-kernels/blob/6a8ec71de68cae09e844f77a547475eded68f963/PROVENANCE.json"
+    },
+    {
+      "path": "pyproject.toml",
+      "ref": "6a8ec71de68cae09e844f77a547475eded68f963",
+      "sha256": "e56b80a46feecbb5363c3d72aa6c3a8b590641ae1bf7b4ad68e60e6469a112f8",
+      "url": "https://github.com/bkrabach/amplifier-platform-kernels/blob/6a8ec71de68cae09e844f77a547475eded68f963/pyproject.toml"
+    }
+  ],
+  "display_name": "Amplifier Platform Kernels",
+  "edges": [
+    {
+      "from": "caller",
+      "relation": "uses",
+      "to": "self"
+    },
+    {
+      "from": "self",
+      "relation": "contains",
+      "to": "part-0"
+    },
+    {
+      "from": "self",
+      "relation": "contains",
+      "to": "part-1"
+    },
+    {
+      "from": "self",
+      "relation": "contains",
+      "to": "part-2"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "self",
+      "kind": "self",
+      "label": "Amplifier Platform Kernels",
+      "repository": "bkrabach/amplifier-platform-kernels"
+    },
+    {
+      "id": "caller",
+      "kind": "external",
+      "label": "Calling application (Python API)"
+    },
+    {
+      "id": "part-0",
+      "kind": "internal",
+      "label": "Kernel manager"
+    },
+    {
+      "id": "part-1",
+      "kind": "internal",
+      "label": "Python runner"
+    },
+    {
+      "id": "part-2",
+      "kind": "internal",
+      "label": "Node runner"
+    }
+  ],
+  "notes": [
+    "This is an independent open-source package hosted by bkrabach, not a Microsoft component in the Constellation family index.",
+    "The public source import preserves its Unified provenance. Source ownership, publication and consumer artifact selection are separate reviewed steps; this listing does not change an existing selection.",
+    "The package does not launch processes itself. Lost ownership or uncertain delivery does not replay code or reconstruct variables; the Node namespace is not a security boundary."
+  ],
+  "page_kind": "supporting library",
+  "purpose": "Keep Python and Node computation state across cells. An independent Python library.",
+  "ref": "6a8ec71de68cae09e844f77a547475eded68f963",
+  "repository": "bkrabach/amplifier-platform-kernels",
+  "roles": [],
+  "start_cta": {
+    "label": "Read the library guide",
+    "url": "https://github.com/bkrabach/amplifier-platform-kernels/blob/6a8ec71de68cae09e844f77a547475eded68f963/README.md#build-and-test-independently"
+  },
+  "summary": "A kernel manager and child runners use caller-supplied process operations, observation and trusted runtime paths. The caller owns process authority and cleanup.",
+  "supports_roles": [],
+  "visibility": "public"
+}
