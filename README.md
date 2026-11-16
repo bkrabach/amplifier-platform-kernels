@@ -89,3 +89,12 @@ ACP’s separate public Git selection also remains unchanged; updating this auth
 repository does not update ACP or Unified. The package workflow reuses the exact
 public BashTool, operations and Core wheel test peers from the existing producer.
 Core is a test-peer dependency only; no Core source build, model or account is used.
+
+## Project guidance
+
+The original MIT license and Microsoft open-source conduct, security and support
+guidance are retained for this eventual Microsoft home. This repository is
+currently hosted under `bkrabach`; it does not claim Microsoft organization
+automation, CLA enforcement, release service connections or support coverage.
+The existing security-reporting guidance is retained; do not post vulnerabilities
+in public issues.
