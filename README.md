@@ -33,7 +33,7 @@ Before running the tests, install the public `operations-v0.1.0` wheel
 without declaring it; this is a test-peer requirement, not a kernels runtime
 dependency. Include the peers' declared dependencies. Do not install Unified to
 obtain these peers or build Core from source. The
-[kernels workflow](../../.github/workflows/kernels-release.yml) pins the Linux
+[package workflow](.github/workflows/package.yml) pins the Linux
 publication-test wheels by SHA-256 and uses Node 22.23.3. It installs the original
 kernels wheel outside the checkout and requires all ten cases without skips.
 
@@ -51,50 +51,41 @@ outside the source checkout and run there without a source `PYTHONPATH`. The whe
 contains the four runtime files, including `node_runner.cjs`; the source archive
 also carries these tests. Standalone editable development uses this same source.
 
-## Authoring and delivery
+## Ownership and provenance
 
-This directory is the canonical authoring home. Unified bundles only the public
-artifact selected by `components/kernels.source.json`, in the generated root
-`amplifier_kernels/` snapshot. Its four runtime files and license are verified
-offline during ordinary wheel, source archive and editable builds. The root
-layout preserves existing runtime bootstrap origin checks; Unified remains the
-sole installed distribution owner. Never edit that snapshot by hand or coinstall
-the standalone distribution with Unified. Author changes and publications can
-advance independently without changing the app default.
+This history-preserving project is prepared as the public author home at
+`bkrabach/amplifier-platform-kernels`, with a later transfer to Microsoft planned.
+[PROVENANCE.json](PROVENANCE.json) records the original public Unified source,
+pre-move history, and exact imported runtime/test bytes. Original MIT attribution
+is preserved. The repository name does not rename the `amplifier-kernels`
+distribution or `amplifier_kernels` import.
 
-From the Unified root, a maintainer can explicitly select four downloaded public
-release assets using `python scripts/scheduling_delivery.py select --component
-kernels --dist <assets> --revision <published-commit> --receipt-sha256 <checksum>`.
-Review and qualify the resulting snapshot and receipt together. Ordinary builds
-never download or change the selection. Return to an earlier app through its
-normal rollback; saved observations remain, but terminated kernel variables are
-never reconstructed or replayed.
+This import changes no runtime behavior, dependency requirement, package version,
+or maintained test. Unified retains its host integration and policy. Authoring
+handoff and consumer selection are separate reviewed changes; retire Unified’s
+authored project at handoff rather than maintain two authoring copies.
 
-Host tests retain mounted tool approval, question dependencies, conversation
-selection, recovery and execution authority. The standalone workflow runs this
-author project's tests against its own wheel outside the checkout; host test
-discovery does not run future author tests against an older app selection.
+Use a separate environment for this distribution. Do not coinstall it with
+`amplifier-unified`, which currently owns its selected `amplifier_kernels` files.
+This source import is not independent pip replacement inside a Unified prefix.
 
-Released [ACP 0.1.7](https://github.com/microsoft/amplifier-app-acp/releases/tag/v0.1.7)
-selects this public project at Git commit
-`8f4c05c53e5343a39433bc4a64f0d9e0104ce0e8`, subdirectory `amplifier_kernels`.
-Kernel changes originate here; each consumer selects and qualifies its own update.
-The standalone producer does not change that dependency or Unified's selected
-artifact, fetch packages at runtime, or automatically synchronize consumers.
+## Existing delivery and future publication
 
-## Standalone publication
+Unified continues to select the immutable [kernels-v0.1.0 artifacts](https://github.com/microsoft/amplifier-unified/releases/tag/kernels-v0.1.0)
+from their original public producer. The original source receipt, revision,
+subdirectory and hashes remain historical identities; this repository does not
+republish or relabel those artifacts. Unified’s generated `amplifier_kernels/`
+is selected by `components/kernels.source.json` and verified offline during
+normal builds. Do not edit that generated copy by hand.
 
-The existing component publisher accepts `--component kernels`. Its assets are
-`amplifier_kernels-0.1.0-py3-none-any.whl`, `amplifier_kernels-0.1.0.tar.gz`,
-`kernels-source.json` and `SHA256SUMS`, under `kernels-v0.1.0`. The receipt binds
-both artifacts to the exact public Git source, including `node_runner.cjs` and
-the maintained tests. The workflow builds once and qualifies that same wheel;
-PRs qualify without publishing. After review and merge, the sole release owner
-may dispatch `kernels-release.yml` on `main` with the full merged revision.
-Existing tags and asset bytes are immutable; inspect saved draft state after an
-uncertain operation before retrying the ordinary publisher.
+The [package workflow](.github/workflows/package.yml) builds one wheel and source
+archive, then tests that wheel outside the checkout. It does not publish a release
+or change any consumer. A future publication needs an exact source/artifact
+receipt and review of Unified’s selector for this repository-root project layout;
+the existing selector identifies historical monorepo subdirectories. Source moves
+do not reserve a new version or make the original receipts invalid.
 
-Workflow support is not a publication or consumer-adoption receipt. The `0.1.0`
-package version and repository ownership are unchanged. Use separate environments
-for the standalone distribution and Unified: do not coinstall them while both
-own `amplifier_kernels` package files.
+ACP’s separate public Git selection also remains unchanged; updating this author
+repository does not update ACP or Unified. The package workflow reuses the exact
+public BashTool, operations and Core wheel test peers from the existing producer.
+Core is a test-peer dependency only; no Core source build, model or account is used.
