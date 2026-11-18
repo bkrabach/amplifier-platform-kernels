@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      revision:
+        description: Full merged commit SHA to build and verify
+        required: true
+        type: string
+      publish:
+        description: Publish the verified immutable artifacts after installed checks
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -12,16 +21,45 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.plan.outputs.revision }}
+      version: ${{ steps.plan.outputs.version }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
           enable-cache: false
-      - name: Build the standalone wheel and source archive
-        run: uv build --sdist --wheel --out-dir "$RUNNER_TEMP/kernels-dist"
+      - name: Check publication refusal and recovery
+        run: |
+          controls="$RUNNER_TEMP/kernels-release-tests"
+          mkdir "$controls"
+          cp -R scripts tests_release "$controls/"
+          cd "$controls"
+          uv run --no-project --with pytest python -m pytest -q tests_release
+      - name: Select exact source
+        id: plan
+        env:
+          SELECTED_REVISION: ${{ inputs.revision || github.sha }}
+        run: |
+          flags=()
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then flags+=(--qualification); fi
+          python scripts/release.py plan --revision "$SELECTED_REVISION" "${flags[@]}" --output "$GITHUB_OUTPUT"
+      - name: Build and seal the selected standalone artifacts
+        env:
+          SELECTED_REVISION: ${{ steps.plan.outputs.revision }}
+        run: |
+          mkdir "$RUNNER_TEMP/kernels-source"
+          git archive "$SELECTED_REVISION" | (cd "$RUNNER_TEMP/kernels-source" && tar -x)
+          uv build --sdist --wheel "$RUNNER_TEMP/kernels-source" --out-dir "$RUNNER_TEMP/kernels-dist"
+          rm -f "$RUNNER_TEMP/kernels-dist/.gitignore"
+          flags=()
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then flags+=(--qualification); fi
+          python scripts/release.py seal --revision "$SELECTED_REVISION" --dist "$RUNNER_TEMP/kernels-dist" "${flags[@]}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: kernels-distributions
@@ -40,6 +78,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
@@ -53,9 +93,14 @@ jobs:
         with:
           name: kernels-distributions
           path: ${{ runner.temp }}/kernels-dist
-      - name: Test the installed wheel outside the source checkout
+      - name: Verify and test the installed wheel outside the source checkout
+        env:
+          SELECTED_REVISION: ${{ needs.build.outputs.revision }}
+          SELECTED_VERSION: ${{ needs.build.outputs.version }}
         run: |
-          version=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          flags=()
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then flags+=(--qualification); fi
+          python scripts/release.py verify --revision "$SELECTED_REVISION" --dist "$RUNNER_TEMP/kernels-dist" "${flags[@]}"
           uv venv --python 3.13 "$RUNNER_TEMP/kernels-installed"
           python_path="$RUNNER_TEMP/kernels-installed/bin/python"
           if [ "$RUNNER_OS" = Windows ]; then python_path="$RUNNER_TEMP/kernels-installed/Scripts/python.exe"; fi
@@ -66,12 +111,12 @@ jobs:
           curl --fail --location --output "$operations_wheel" https://github.com/microsoft/amplifier-unified/releases/download/operations-v0.1.0/amplifier_operations-0.1.0-py3-none-any.whl
           curl --fail --location --output "$core_wheel" https://files.pythonhosted.org/packages/e5/76/b58ae511f00c3ba2774213c2d336a6c2e29c94819280df5e52b136b6dae3/amplifier_core-2.0.2-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
           printf '%s  %s\n' 05675519079bbfb75be9ce0bc6fcba8c4a4ba6fd06dc8105ca706aec5ac43a1a "$operations_wheel" 50406335d88598d6b4cba90f8598e7774d2b9b189e9d3992a09474b777036f9f "$core_wheel" | sha256sum --check
-          uv pip install --python "$python_path" --only-binary amplifier-core "$RUNNER_TEMP/kernels-dist/amplifier_kernels-$version-py3-none-any.whl[test]" "$operations_wheel" "$core_wheel" 'amplifier-module-tool-bash @ git+https://github.com/microsoft/amplifier-module-tool-bash@d5bb46d24dcae8e260211bf8fb5c22de3a67f406'
+          uv pip install --python "$python_path" --only-binary amplifier-core "$RUNNER_TEMP/kernels-dist/amplifier_kernels-$SELECTED_VERSION-py3-none-any.whl[test]" "$operations_wheel" "$core_wheel" 'amplifier-module-tool-bash @ git+https://github.com/microsoft/amplifier-module-tool-bash@d5bb46d24dcae8e260211bf8fb5c22de3a67f406'
           mkdir "$RUNNER_TEMP/kernels-tests"
-          git archive HEAD tests pyproject.toml | (cd "$RUNNER_TEMP/kernels-tests" && tar -x)
+          git archive "$SELECTED_REVISION" tests pyproject.toml | (cd "$RUNNER_TEMP/kernels-tests" && tar -x)
           cd "$RUNNER_TEMP/kernels-tests"
           "$python_path" -I -c 'from pathlib import Path; import sys, amplifier_kernels; assert Path(amplifier_kernels.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()); assert not any(name in sys.modules for name in ("amplifier_web", "amplifier_foundation"))'
-          "$python_path" -I -m pytest -q tests --junitxml=installed-tests.xml
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 "$python_path" -I -m pytest -p pytest_asyncio.plugin -q tests --junitxml=installed-tests.xml
           "$python_path" -I -c 'import xml.etree.ElementTree as E; cases=E.parse("installed-tests.xml").findall(".//testcase"); assert len(cases)==10 and all(not list(case) for case in cases), "All ten Python/Node mechanism cases must pass without skips"'
           uv pip check --python "$python_path"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -80,3 +125,29 @@ jobs:
           name: kernels-installed-${{ matrix.os }}
           path: ${{ runner.temp }}/kernels-tests/installed-tests.xml
           if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish
+    needs: [build, installed]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: kernels-publication
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: kernels-distributions
+          path: ${{ runner.temp }}/kernels-dist
+      - name: Publish only the original verified bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SELECTED_REVISION: ${{ needs.build.outputs.revision }}
+        run: python scripts/release.py publish --revision "$SELECTED_REVISION" --dist "$RUNNER_TEMP/kernels-dist"
