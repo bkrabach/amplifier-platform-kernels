@@ -87,21 +87,37 @@ Use a separate environment for this distribution. Do not coinstall it with
 `amplifier-unified`, which currently owns its selected `amplifier_kernels` files.
 This source import is not independent pip replacement inside a Unified prefix.
 
-## Existing delivery and future publication
+## Artifact publication and consumer selection
 
-Unified continues to select the immutable [kernels-v0.1.0 artifacts](https://github.com/microsoft/amplifier-unified/releases/tag/kernels-v0.1.0)
+Before the public author handoff, Unified selected the immutable [kernels-v0.1.0 artifacts](https://github.com/microsoft/amplifier-unified/releases/tag/kernels-v0.1.0)
 from their original public producer. The original source receipt, revision,
 subdirectory and hashes remain historical identities; this repository does not
 republish or relabel those artifacts. Unified’s generated `amplifier_kernels/`
 is selected by `components/kernels.source.json` and verified offline during
 normal builds. Do not edit that generated copy by hand.
 
-The [package workflow](.github/workflows/package.yml) builds one wheel and source
-archive, then tests that wheel outside the checkout. It does not publish a release
-or change any consumer. A future publication needs an exact source/artifact
-receipt and review of Unified’s selector for this repository-root project layout;
-the existing selector identifies historical monorepo subdirectories. Source moves
-do not reserve a new version or make the original receipts invalid.
+The [package workflow](.github/workflows/package.yml) builds and seals one wheel
+and source archive from an exact merged commit, then tests that original wheel
+outside the checkout. The receipt identifies `component: kernels`, this repository,
+the full source revision and root tree, `subdirectory: .`, exact package inputs and
+artifact hashes. The flat Python files and `node_runner.cjs` must map exactly into
+`amplifier_kernels/`; governance and tests are verified against the source archive.
+Repository automation is bound by the full source tree, not installed as runtime.
+
+To qualify without publishing, use the ordinary pull-request checks. Publication
+is an explicit dispatch of `package.yml` from `main` with the full merged
+`revision` and `publish: true`; the version comes from unchanged package metadata.
+The publisher creates `kernels-v<version>` and four immutable assets: wheel, source
+archive, `kernels-source.json` and `SHA256SUMS`. It never overwrites an asset or
+moves an existing tag. After a failed or cancelled run, inspect its retained draft,
+tag and original artifacts; resume only the same exact source and bytes. Existing
+public releases are accepted only when their complete identity and bytes match.
+
+Consumer adoption is separate: use Unified’s supported artifact selector and
+installed-package checks, then retire its temporary author copy through review.
+Publication alone updates neither Unified nor ACP. The historical Unified release
+and source receipt remain immutable; the same package version in this repository
+is a distinct source/artifact identity, not a rewrite of that original release.
 
 ACP’s separate public Git selection also remains unchanged; updating this author
 repository does not update ACP or Unified. The package workflow reuses the exact
